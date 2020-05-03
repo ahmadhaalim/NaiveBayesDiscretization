@@ -1,0 +1,254 @@
+Index: Discetizer.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Discetizer.py	(date 1558438459165)
++++ Discetizer.py	(date 1558438459165)
+@@ -1,15 +1,197 @@
++
+ import math as mt
+ import numpy as np
+ import pandas as pd
++from NaiveBayes import NaiveBayes
+ 
+ class Discretizer:
+ 
+     def __init__(self, data):
+-         self._df = data.copy()
+-         self._allcolumns = []
+-         self._uniqueClass = np.empty([1, 1])
+-         self._splitter = {}
+-         self._splitValue = []
++        self._df = data.copy()
++        self._allcolumns = []
++        self._uniqueClass = np.empty([1, 1])
++        self._splitter = {}
++        self._splitValue = []
++        self.deletedcolumns = []
++
++    def train(self):
++        #interface.ProgressBar.lift(interface.FrameDiskritisasi)
++        #interface.ProgressBar.start()
++        self._allcolumns = list(self._df)
++        '''MENDAPATKAN BANYAK KELAS UNIK DALAM DF'''
++        self._uniqueClass = self.getUniqueClass(self._df)
++        i = 0
++        while i < len(self._allcolumns)-1:
++            print(i)
++            self._splitter = {}
++            '''KOLOM while i < 1: 'KOLOM '''
++            self._df = self._df.sort_values(self._allcolumns[i])
++            df = self._df.iloc[:, [i, -1]]
++            self.Splitting(df, self._uniqueClass)
++            applier = list(self._splitter.values())
++            applier.sort()
++            self._splitValue.append(applier)
++            self.Apply(applier,i)
++
++            i += 1
++        #alamat = interface.SaveFile("Simpan Dataset Hasil Diskritisasi")
++        #self._df.to_csv(alamat + ".csv", index=False)
++        #interface.ButtonProsesDiskrit.configure(state='normal')
++        #interface.ButtonUji.configure(state='normal')
++        #interface.ButtonLatih.configure(state='normal')
++        #interface.ProgressBar.stop()
++        #interface.ProgressBar.lower(interface.FrameDiskritisasi)
++        print(self._df)
++
++    def getsplitValue(self):
++        return self._splitValue
++
++    def getUniqueClass(self, df):
++        allcolumns = list(df)
++        KolomKelas = allcolumns[-1]
++        UniqueClass = df.__getattr__(KolomKelas).unique()
++        return UniqueClass
++
++    def Splitting(self, df, UniqueClass):
++        '''MENGHITUNG PROB TIAP KELAS'''
++        ClassProb = self.HitungProbKelas(df, UniqueClass)
++        '''MENGHITUNG ENTROPY KELAS'''
++        ClassEntropy = self.HitungEntropy(UniqueClass, ClassProb)
++        PotSplitGain = {}
++        j = 0
++        while j < (len(df) - 1):
++            '''BARIS 10 DATA len(df)'''
++            try:
++                if df.iat[j, -1] != df.iat[j + 1, -1]:
++                    if df.iat[j, 0] != df.iat[j + 1, 0]:
++                        '''calculate entropy & calculate the gain'''
++                        s1 = df.iloc[:j + 1]
++                        s2 = df.iloc[(j + 1):]
++                        s1UniqueClass = self.getUniqueClass(s1)
++                        s2UniqueClass = self.getUniqueClass(s2)
++                        s1ProbKelas = self.HitungProbKelas(s1, s1UniqueClass)
++                        s2ProbKelas = self.HitungProbKelas(s2, s2UniqueClass)
++                        s1Entropy = self.HitungEntropy(s1UniqueClass, s1ProbKelas)
++                        s2Entropy = self.HitungEntropy(s2UniqueClass, s2ProbKelas)
++                        splitEntropy = ((len(s1) / len(df)) * s1Entropy) + ((len(s2) / len(df)) * s2Entropy)
++                        Gain = ClassEntropy - splitEntropy
++                        PotSplitGain.update({j: Gain})
++            except IndexError:
++                print('INDEX ERROR')
++
++            j += 1
++
++        if PotSplitGain != {}:
++            MaxGain = max(PotSplitGain, key=PotSplitGain.get)
++            s1 = df.iloc[:MaxGain + 1]
++            s2 = df.iloc[(MaxGain + 1):]
++            s1UniqueClass = self.getUniqueClass(s1)
++            s2UniqueClass = self.getUniqueClass(s2)
++            s1ProbKelas = self.HitungProbKelas(s1, s1UniqueClass)
++            s2ProbKelas = self.HitungProbKelas(s2, s2UniqueClass)
++            s1Entropy = self.HitungEntropy(s1UniqueClass, s1ProbKelas)
++            s2Entropy = self.HitungEntropy(s2UniqueClass, s2ProbKelas)
++            splitEntropy = ((len(s1) / len(df)) * s1Entropy) + ((len(s2) / len(df)) * s2Entropy)
++            Gain = ClassEntropy - splitEntropy
++            DeltaATS = mt.log2(mt.pow(3, len(UniqueClass)) - 2) - ((len(UniqueClass) * ClassEntropy) -
++                                                                   (len(s1UniqueClass) * s1Entropy) -
++                                                                   (len(s2UniqueClass) * s2Entropy))
++            MinimalGain = (mt.log2(len(df) - 1) / len(df)) + (DeltaATS / len(df))
++
++            if Gain > MinimalGain:
++                self._splitter.update({MaxGain: df.iat[MaxGain, 0]})
++                'print(self.splitter)'
++                self.Splitting(s1, s1UniqueClass)
++                self.Splitting(s2, s2UniqueClass)
++
++    def HitungProbKelas(self, df, UniqueClass):
++        classprob = {}
++        k = 0
++        'MENGHITUNG PROB TIAP KELAS'
++        while k < len(UniqueClass):
++            tempprob = len(df.loc[df.iloc[:, -1] == UniqueClass[k]]) / len(df)
++            classprob.update({UniqueClass[k]: tempprob})
++            k += 1
++        return classprob
++
++    def HitungEntropy(self, UniqueClass, ClassProb):
++        l = 0
++        entropy = 0
++        while l < len(UniqueClass):
++            entropy = entropy + (ClassProb[UniqueClass[l]] * mt.log2(ClassProb[UniqueClass[l]]))
++            l += 1
++        entropy = -entropy
++        return entropy
++
++    def Apply(self, applier, i):
++        'print(type(applier[0]))'
++        'print(applier)'
++        j = 0
++        k = 0
++
++        while k < len(applier):
++            'print(j)'
++            while j < len(self._df):
++                if self._df.iat[j, i] <= applier[k]:
++                    if k != 0:
++                        self._df.iloc[j:j + 1, i:i + 1] = str(applier[k - 1]) + "<=X<=" + str(applier[k])
++                    elif k == 0:
++                        self._df.iloc[j:j + 1, i:i + 1] = 'Inf<=X<=' + str(applier[k])
++
++                else:
++
++                    if k == (len(applier) - 1):
++                        while j < len(self._df):
++                            self._df.iloc[j:j + 1, i:i + 1] = str(applier[k]) + "<=X<=Inf"
++                            j += 1
++                    break
++
++                j += 1
++            k += 1
++
++    def ApplyUji(self,splitValue):
++        #interface.ProgressBar.start()
++        self._allcolumns = list(self._df)
++        i = 0
++        while i <len(splitValue):
++            self._df = self._df.sort_values(self._allcolumns[i])
++            applier  = splitValue[i]
++
++            self.Apply(applier,i)
++            i+=1
++
++    def getDataUji(self):
++        return self._df
++
++datalatih = pd.read_csv("C:/Users/halim/Documents/KULIAH/SEMESTER 8/DATASET/avila-tr.csv")
++dsc = Discretizer(datalatih)
++dsc.train()
++datauji = pd.read_csv("C:/Users/halim/Documents/KULIAH/SEMESTER 8/DATASET/avila-ts.csv")
++dscuji = Discretizer(datauji)
++dscuji.ApplyUji(dsc.getsplitValue())
++print(dscuji._df)
++dscuji._df.to_csv(r'C://Users/halim/Documents/KULIAH/SEMESTER 8/uji1.csv',index=False)
++NB = NaiveBayes('C://Users/halim/Documents/KULIAH/SEMESTER 8/uji1.csv')
++
++"""
++filename = 'dsc2019.sav'
++pickle.dump(dsc, open(filename, 'wb'))
++
++loaded_dsc = pickle.load(open(filename,'rb'))"""
++
++
++
++
++"""
++class Discretizer:
++
++    def __init__(self, data):
++        self._df = data.copy()
++        self._allcolumns = []
++        self._uniqueClass = np.empty([1, 1])
++        self._splitter = {}
++        self._splitValue = []
++        self.deletedcolumns = []
+ 
+     def train(self, interface):
+         interface.ProgressBar.lift(interface.FrameDiskritisasi)
+@@ -28,10 +210,6 @@
+             applier = list(self._splitter.values())
+             applier.sort()
+             self._splitValue.append(applier)
+-
+-            '''print(i)
+-            print('SPLITTER')
+-            print(self.splitter)'''
+             self.Apply(applier,i)
+ 
+             i += 1
+@@ -44,6 +222,9 @@
+         interface.ProgressBar.lower(interface.FrameDiskritisasi)
+         print(self._df)
+ 
++    def getsplitValue(self):
++        return self._splitValue
++
+     def getUniqueClass(self, df):
+         allcolumns = list(df)
+         KolomKelas = allcolumns[-1]
+@@ -158,16 +339,10 @@
+             self.Apply(applier,i)
+             i+=1
+ 
++    def getDataUji(self):
++        return self._df
+ 
+-'''
+-dsc = Discretizer('C:/Users/halim/Documents/KULIAH/SEMESTER 7/Dataset Numerik/avila/avila/avila-tr2.csv')
+-dsc.train()
+-dscuji = Discretizer('C:/Users/halim/Documents/KULIAH/SEMESTER 7/Dataset Numerik/avila/avila/avila-ts.csv')
+-dscuji.ApplyUji(dsc.splitValue)
+-print(dscuji.df)
+-dscuji.df.to_csv(r'C://Users/halim/Documents/KULIAH/SEMESTER 8/uji1.csv',index=False)
+ 
+-filename = 'dsc2019.sav'
+-pickle.dump(dsc, open(filename, 'wb'))
++
+ 
+-loaded_dsc = pickle.load(open(filename,'rb'))'''
+\ No newline at end of file
++"""
+\ No newline at end of file

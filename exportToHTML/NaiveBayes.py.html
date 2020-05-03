@@ -1,0 +1,131 @@
+<html>
+<head>
+<title>NaiveBayes.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #999999; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(0,0,128); font-weight: bold; }
+.s1 { color: rgb(0,0,0); }
+.s2 { color: rgb(0,0,255); }
+.s3 { color: rgb(128,128,128); font-style: italic; }
+.s4 { color: rgb(0,128,128); font-weight: bold; }
+</style>
+</head>
+<BODY BGCOLOR="#ffffff">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+NaiveBayes.py</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np 
+<a name="l2"><span class="ln">2    </span></a></span><span class="s0">import </span><span class="s1">time 
+<a name="l3"><span class="ln">3    </span></a> 
+<a name="l4"><span class="ln">4    </span></a></span><span class="s0">class </span><span class="s1">NaiveBayes: 
+<a name="l5"><span class="ln">5    </span></a>    </span><span class="s0">def </span><span class="s1">__init__(self, data): 
+<a name="l6"><span class="ln">6    </span></a>        self.__datalatih = data.copy() 
+<a name="l7"><span class="ln">7    </span></a>        self.__uniqueClass = np.empty([</span><span class="s2">1</span><span class="s1">, </span><span class="s2">1</span><span class="s1">]) 
+<a name="l8"><span class="ln">8    </span></a>        self.__classprob = {} 
+<a name="l9"><span class="ln">9    </span></a>        self.__pxc ={} 
+<a name="l10"><span class="ln">10   </span></a> 
+<a name="l11"><span class="ln">11   </span></a>    </span><span class="s0">def </span><span class="s1">latih(self): 
+<a name="l12"><span class="ln">12   </span></a>        allcolumns = list(self.__datalatih) 
+<a name="l13"><span class="ln">13   </span></a>        KolomKelas = allcolumns[-</span><span class="s2">1</span><span class="s1">] 
+<a name="l14"><span class="ln">14   </span></a>        self.__uniqueClass = self.__datalatih.__getattr__(KolomKelas).unique() 
+<a name="l15"><span class="ln">15   </span></a>        </span><span class="s3"># CLASS LOOP</span><span class="s1"> 
+<a name="l16"><span class="ln">16   </span></a>        i = </span><span class="s2">0</span><span class="s1"> 
+<a name="l17"><span class="ln">17   </span></a>        </span><span class="s0">while </span><span class="s1">i &lt; len(self.__uniqueClass): 
+<a name="l18"><span class="ln">18   </span></a>            tempdf = self.__datalatih.loc[self.__datalatih.iloc[:, -</span><span class="s2">1</span><span class="s1">] == self.__uniqueClass[i]] 
+<a name="l19"><span class="ln">19   </span></a>            tempdf = tempdf.reset_index(drop=</span><span class="s0">True</span><span class="s1">) 
+<a name="l20"><span class="ln">20   </span></a>            tempprob = len(tempdf) / len(self.__datalatih) 
+<a name="l21"><span class="ln">21   </span></a>            self.__classprob.update({self.__uniqueClass[i]: tempprob}) 
+<a name="l22"><span class="ln">22   </span></a>            dictcolumn = {} 
+<a name="l23"><span class="ln">23   </span></a>            </span><span class="s3">#COLUMN LOOP</span><span class="s1"> 
+<a name="l24"><span class="ln">24   </span></a>            j = </span><span class="s2">0</span><span class="s1"> 
+<a name="l25"><span class="ln">25   </span></a>            </span><span class="s0">while </span><span class="s1">j&lt;len(allcolumns)-</span><span class="s2">1</span><span class="s1">: 
+<a name="l26"><span class="ln">26   </span></a>                UniqueValues = self.__datalatih.__getattr__(allcolumns[j]).unique() 
+<a name="l27"><span class="ln">27   </span></a>                </span><span class="s3">#UNIQUE COLUMN VALUE LOOP</span><span class="s1"> 
+<a name="l28"><span class="ln">28   </span></a>                tempdf2 = tempdf.iloc[:, [j, -</span><span class="s2">1</span><span class="s1">]] 
+<a name="l29"><span class="ln">29   </span></a>                dictvalue = {} 
+<a name="l30"><span class="ln">30   </span></a>                k = </span><span class="s2">0</span><span class="s1"> 
+<a name="l31"><span class="ln">31   </span></a>                </span><span class="s0">while </span><span class="s1">k&lt; len(UniqueValues): 
+<a name="l32"><span class="ln">32   </span></a>                    tempdf3 = tempdf2.loc[tempdf2[allcolumns[j]]==UniqueValues[k]] 
+<a name="l33"><span class="ln">33   </span></a>                    tempdf3 = tempdf3.reset_index(drop=</span><span class="s0">True</span><span class="s1">) 
+<a name="l34"><span class="ln">34   </span></a>                    valueprob = len(tempdf3)/len(tempdf) 
+<a name="l35"><span class="ln">35   </span></a>                    dictvalue.update({UniqueValues[k]:valueprob}) 
+<a name="l36"><span class="ln">36   </span></a>                    k+=</span><span class="s2">1</span><span class="s1"> 
+<a name="l37"><span class="ln">37   </span></a> 
+<a name="l38"><span class="ln">38   </span></a>                dictcolumn.update({j:dictvalue}) 
+<a name="l39"><span class="ln">39   </span></a>                j+=</span><span class="s2">1</span><span class="s1"> 
+<a name="l40"><span class="ln">40   </span></a>            self.__pxc.update({self.__uniqueClass[i]:dictcolumn}) 
+<a name="l41"><span class="ln">41   </span></a>            </span><span class="s3">#[CLASS][COLUMNS][VALUE]</span><span class="s1"> 
+<a name="l42"><span class="ln">42   </span></a>            i += </span><span class="s2">1</span><span class="s1"> 
+<a name="l43"><span class="ln">43   </span></a> 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>    </span><span class="s0">def </span><span class="s1">uji(self, data, interface, ImportedFile): 
+<a name="l46"><span class="ln">46   </span></a>        ujistart = time.clock() 
+<a name="l47"><span class="ln">47   </span></a>        datauji = data.copy() 
+<a name="l48"><span class="ln">48   </span></a>        print(</span><span class="s4">&quot;datauji&quot;</span><span class="s1">) 
+<a name="l49"><span class="ln">49   </span></a>        print(datauji) 
+<a name="l50"><span class="ln">50   </span></a>        datapredik = datauji.copy() 
+<a name="l51"><span class="ln">51   </span></a>        datapredik[</span><span class="s4">'PREDIKSI'</span><span class="s1">] = </span><span class="s4">'NaN'</span><span class="s1"> 
+<a name="l52"><span class="ln">52   </span></a>        allcolumns = list(datauji) 
+<a name="l53"><span class="ln">53   </span></a>        </span><span class="s3">#row</span><span class="s1"> 
+<a name="l54"><span class="ln">54   </span></a>        i=</span><span class="s2">0</span><span class="s1"> 
+<a name="l55"><span class="ln">55   </span></a>        </span><span class="s3">#print(len(datapredik))</span><span class="s1"> 
+<a name="l56"><span class="ln">56   </span></a>        </span><span class="s0">while </span><span class="s1">i &lt; len(datapredik): 
+<a name="l57"><span class="ln">57   </span></a>            </span><span class="s3">#print('baris'+str(i))</span><span class="s1"> 
+<a name="l58"><span class="ln">58   </span></a>            probkelas = {} 
+<a name="l59"><span class="ln">59   </span></a>            </span><span class="s3">#class</span><span class="s1"> 
+<a name="l60"><span class="ln">60   </span></a>            j=</span><span class="s2">0</span><span class="s1"> 
+<a name="l61"><span class="ln">61   </span></a>            </span><span class="s0">while </span><span class="s1">j&lt;len(self.__uniqueClass): 
+<a name="l62"><span class="ln">62   </span></a>                </span><span class="s3">#print('kelas'+str(j))</span><span class="s1"> 
+<a name="l63"><span class="ln">63   </span></a>                probpxc = [] 
+<a name="l64"><span class="ln">64   </span></a>                </span><span class="s3">#column</span><span class="s1"> 
+<a name="l65"><span class="ln">65   </span></a>                k=</span><span class="s2">0</span><span class="s1"> 
+<a name="l66"><span class="ln">66   </span></a>                </span><span class="s0">while </span><span class="s1">k&lt;len(allcolumns)-</span><span class="s2">1</span><span class="s1">: 
+<a name="l67"><span class="ln">67   </span></a>                    </span><span class="s3">#print(self.UniqueClass[j],k,datapredik.iat[i,k])</span><span class="s1"> 
+<a name="l68"><span class="ln">68   </span></a>                    </span><span class="s3">#print('kolom' + str(k))</span><span class="s1"> 
+<a name="l69"><span class="ln">69   </span></a>                    </span><span class="s0">try</span><span class="s1">: 
+<a name="l70"><span class="ln">70   </span></a>                        print(self.__pxc[self.__uniqueClass[j]][k][datapredik.iat[i, k]]) 
+<a name="l71"><span class="ln">71   </span></a>                        probpxc.append(self.__pxc[self.__uniqueClass[j]][k][datapredik.iat[i, k]]) 
+<a name="l72"><span class="ln">72   </span></a>                        </span><span class="s3">#prob.update({self.UniqueClass[j]:self.pxc[self.UniqueClass[j]][k][datapredik.iat[i,j]]})</span><span class="s1"> 
+<a name="l73"><span class="ln">73   </span></a>                    </span><span class="s0">except </span><span class="s1">KeyError: 
+<a name="l74"><span class="ln">74   </span></a>                         
+<a name="l75"><span class="ln">75   </span></a>                        print(</span><span class="s4">&quot;error&quot;</span><span class="s1">) 
+<a name="l76"><span class="ln">76   </span></a>                        probpxc.append(</span><span class="s2">0</span><span class="s1">) 
+<a name="l77"><span class="ln">77   </span></a>                    k+=</span><span class="s2">1</span><span class="s1"> 
+<a name="l78"><span class="ln">78   </span></a>                </span><span class="s3">#hitung prob pxc</span><span class="s1"> 
+<a name="l79"><span class="ln">79   </span></a>                hasil = </span><span class="s2">1</span><span class="s1"> 
+<a name="l80"><span class="ln">80   </span></a>                </span><span class="s0">for </span><span class="s1">x </span><span class="s0">in </span><span class="s1">probpxc: 
+<a name="l81"><span class="ln">81   </span></a>                    hasil = hasil * x 
+<a name="l82"><span class="ln">82   </span></a>                </span><span class="s3">#hitung probabilitas satu baris ke suatu kelas</span><span class="s1"> 
+<a name="l83"><span class="ln">83   </span></a>                prob = hasil * self.__classprob[self.__uniqueClass[j]] 
+<a name="l84"><span class="ln">84   </span></a>                </span><span class="s3">#menyimpan probabilitas kelas tertentu yang kemudian dibandingkan</span><span class="s1"> 
+<a name="l85"><span class="ln">85   </span></a>                probkelas.update({self.__uniqueClass[j]:prob}) 
+<a name="l86"><span class="ln">86   </span></a>                j+=</span><span class="s2">1</span><span class="s1"> 
+<a name="l87"><span class="ln">87   </span></a>            predictrow = max(probkelas,key=probkelas.get) 
+<a name="l88"><span class="ln">88   </span></a> 
+<a name="l89"><span class="ln">89   </span></a>            datapredik.at[i,</span><span class="s4">'PREDIKSI'</span><span class="s1">]=predictrow 
+<a name="l90"><span class="ln">90   </span></a>            i+=</span><span class="s2">1</span><span class="s1"> 
+<a name="l91"><span class="ln">91   </span></a> 
+<a name="l92"><span class="ln">92   </span></a>        waktu = time.clock() - ujistart 
+<a name="l93"><span class="ln">93   </span></a>        waktu = round(waktu, </span><span class="s2">2</span><span class="s1">) 
+<a name="l94"><span class="ln">94   </span></a>        interface.LabelWaktuUji.configure(text=</span><span class="s4">&quot;Waktu Uji: &quot; </span><span class="s1">+ str(waktu) + </span><span class="s4">&quot; detik&quot;</span><span class="s1">) 
+<a name="l95"><span class="ln">95   </span></a>        interface.LabelWaktuUji.lift(interface.Frame2) 
+<a name="l96"><span class="ln">96   </span></a>        print(</span><span class="s4">&quot;datapredik&quot;</span><span class="s1">) 
+<a name="l97"><span class="ln">97   </span></a>        print(datapredik) 
+<a name="l98"><span class="ln">98   </span></a>        ImportedFile.createTableCF(datauji, datapredik, self.__uniqueClass, interface) 
+<a name="l99"><span class="ln">99   </span></a> 
+<a name="l100"><span class="ln">100  </span></a> 
+<a name="l101"><span class="ln">101  </span></a> 
+<a name="l102"><span class="ln">102  </span></a></span><span class="s4">&quot;&quot;&quot; 
+<a name="l103"><span class="ln">103  </span></a>data = pd.read_csv('C:/Users/halim/Documents/KULIAH/SEMESTER 8/DATASET/latih1.csv') 
+<a name="l104"><span class="ln">104  </span></a>tes = NaiveBayes(data) 
+<a name="l105"><span class="ln">105  </span></a>tes.Latih() 
+<a name="l106"><span class="ln">106  </span></a>data2 = pd.read_csv('C:/Users/halim/Documents/KULIAH/SEMESTER 8/DATASET/uji1.csv') 
+<a name="l107"><span class="ln">107  </span></a>tes.Uji(data2) 
+<a name="l108"><span class="ln">108  </span></a>&quot;&quot;&quot;</span><span class="s1"> 
+<a name="l109"><span class="ln">109  </span></a></span></pre>
+</body>
+</html>
